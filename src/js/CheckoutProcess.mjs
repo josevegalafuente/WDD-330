@@ -70,23 +70,73 @@ export default class CheckoutProcess {
     return convertedJSON;
   }
 
+  formatErrorMessage(error) {
+    let message =
+      error?.details?.message ||
+      error?.details?.Message ||
+      error?.message ||
+      "There was a problem submitting your order.";
+
+    if (Array.isArray(message)) {
+      message = message.join(" ");
+    }
+
+    return message;
+  }
+
+  showMessage(message, type = "error") {
+    let messageElement = document.querySelector("#checkout-message");
+
+    if (!messageElement) {
+      messageElement = document.createElement("div");
+      messageElement.id = "checkout-message";
+
+      const checkoutSection = document.querySelector(".checkout");
+      const checkoutTitle = checkoutSection.querySelector("h2");
+
+      checkoutTitle.insertAdjacentElement("afterend", messageElement);
+    }
+
+    messageElement.textContent = message;
+    messageElement.className = `checkout-message ${type}`;
+  }
+
+  clearMessage() {
+    const messageElement = document.querySelector("#checkout-message");
+
+    if (messageElement) {
+      messageElement.textContent = "";
+      messageElement.className = "checkout-message";
+    }
+  }
+
   async checkout(formElement) {
-    const order = this.formDataToJSON(formElement);
+    try {
+      this.clearMessage();
 
-    order.orderDate = new Date().toISOString();
-    order.items = this.packageItems();
-    order.itemTotal = Number(this.itemTotal.toFixed(2));
-    order.shipping = Number(this.shipping.toFixed(2));
-    order.tax = Number(this.tax.toFixed(2));
-    order.orderTotal = Number(this.orderTotal.toFixed(2));
+      const order = this.formDataToJSON(formElement);
 
-    const response = await this.dataSource.checkout(order);
+      order.orderDate = new Date().toISOString();
+      order.items = this.packageItems();
+      order.itemTotal = Number(this.itemTotal.toFixed(2));
+      order.shipping = Number(this.shipping.toFixed(2));
+      order.tax = Number(this.tax.toFixed(2));
+      order.orderTotal = Number(this.orderTotal.toFixed(2));
 
-    console.log("Order submitted successfully:", response);
+      const response = await this.dataSource.checkout(order);
 
-    setLocalStorage(this.key, []);
-    formElement.reset();
+      console.log("Order submitted successfully:", response);
 
-    window.location.href = "../cart/index.html";
+      setLocalStorage(this.key, []);
+      formElement.reset();
+
+      window.location.href = "../cart/index.html";
+    } catch (error) {
+      console.error("Checkout error:", error);
+
+      const message = this.formatErrorMessage(error);
+
+      this.showMessage(message, "error");
+    }
   }
 }

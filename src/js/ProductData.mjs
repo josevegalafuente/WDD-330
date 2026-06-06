@@ -1,11 +1,28 @@
 const baseURL = import.meta.env.VITE_SERVER_URL;
 
-function convertToJson(response) {
-  if (response.ok) {
-    return response.json();
-  } else {
-    throw new Error("Bad Response");
+async function convertToJson(response) {
+  let data;
+
+  try {
+    data = await response.json();
+  } catch {
+    data = {
+      message: response.statusText || "There was a problem with the request.",
+    };
   }
+
+  if (response.ok) {
+    return data;
+  }
+
+  const error = new Error(
+    data.message || data.Message || "There was a problem with the request.",
+  );
+
+  error.name = "servicesError";
+  error.details = data;
+
+  throw error;
 }
 
 export default class ProductData {
