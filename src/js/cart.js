@@ -40,9 +40,26 @@ function cartItemTemplate(item) {
 
 function renderCartContents() {
   const cartItems = getLocalStorage("so-cart") || [];
+  const productList = document.querySelector(".product-list");
+  const checkoutButton = document.querySelector(".checkout-button");
+
+  if (cartItems.length === 0) {
+    productList.innerHTML = `<li class="empty-cart">Your cart is empty.</li>`;
+
+    if (checkoutButton) {
+      checkoutButton.style.display = "none";
+    }
+
+    return;
+  }
+
   const htmlItems = cartItems.map((item) => cartItemTemplate(item));
 
-  document.querySelector(".product-list").innerHTML = htmlItems.join("");
+  productList.innerHTML = htmlItems.join("");
+
+  if (checkoutButton) {
+    checkoutButton.style.display = "inline-block";
+  }
 }
 
 renderCartContents();
